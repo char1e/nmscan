@@ -55,7 +55,7 @@ python3 nmscan.py targets.txt
 
 
 
-### 四、输出
+### 输出
 
  会在目标文件的同目录下生成nmscanOutput文件夹，里面存放以IP命名的端口扫结果，可以使用concatExcel.py脚本将所有结果汇总到一起
 
@@ -67,7 +67,7 @@ python3 concatExcel.py nmscanOutput/
 
 
 
-### 五、注意事项
+### 注意事项
 
 虚拟机运行建议增大内存，调高处理器数量
 
