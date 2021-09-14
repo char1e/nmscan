@@ -31,7 +31,7 @@ import sys
     portScanner
     https://www.cnblogs.com/-qing-/p/10900033.html
 
-2020.9.27 by rhaps
+
 '''
 
 
@@ -200,12 +200,6 @@ def nmapData2Excel(host,hostInfo,protocol): #写入xls文件，如果存在就�
     print(host + '的excel表格（%s页）操作完成' % (protocol))
     print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),end='\n\n')
 
-
-def debug():        #调试用，可以删除
-    dTcpInfo = {22:{'state': 'open', 'reason': 'syn-ack', 'name': 'ssh', 'product': 'OpenSSH', 'version': '7.8', 'extrainfo': 'protocol 2.0', 'conf': '10', 'cpe': 'cpe:/a:openbsd:openssh:7.8'}, 3389: {'state': 'open', 'reason': 'syn-ack', 'name': 'ms-wbt-server', 'product': 'Microsoft Terminal Services', 'version': '', 'extrainfo': '', 'conf': '10', 'cpe': 'cpe:/o:microsoft:windows'}, 47001: {'state': 'open', 'reason': 'syn-ack', 'name': 'http', 'product': 'Microsoft HTTPAPI httpd', 'version': '2.0', 'extrainfo': 'SSDP/UPnP', 'conf': '10', 'cpe': 'cpe:/o:microsoft:windows', 'script': {'http-server-header': 'Microsoft-HTTPAPI/2.0'}}, 49664: {'state': 'open', 'reason': 'syn-ack', 'name': 'msrpc', 'product': 'Microsoft Windows RPC', 'version': '', 'extrainfo': '', 'conf': '10', 'cpe': 'cpe:/o:microsoft:windows'}, 49665: {'state': 'open', 'reason': 'syn-ack', 'name': 'msrpc', 'product': 'Microsoft Windows RPC', 'version': '', 'extrainfo': '', 'conf': '10', 'cpe': 'cpe:/o:microsoft:windows'}, 49666: {'state': 'open', 'reason': 'syn-ack', 'name': 'msrpc', 'product': 'Microsoft Windows RPC', 'version': '', 'extrainfo': '', 'conf': '10', 'cpe': 'cpe:/o:microsoft:windows'}, 49667: {'state': 'open', 'reason': 'syn-ack', 'name': 'msrpc', 'product': 'Microsoft Windows RPC', 'version': '', 'extrainfo': '', 'conf': '10', 'cpe': 'cpe:/o:microsoft:windows'}, 49668: {'state': 'open', 'reason': 'syn-ack', 'name': 'msrpc', 'product': 'Microsoft Windows RPC', 'version': '', 'extrainfo': '', 'conf': '10', 'cpe': 'cpe:/o:microsoft:windows'}, 49669: {'state': 'open', 'reason': 'syn-ack', 'name': 'msrpc', 'product': 'Microsoft Windows RPC', 'version': '', 'extrainfo': '', 'conf': '10', 'cpe': 'cpe:/o:microsoft:windows'}, 49674: {'state': 'open', 'reason': 'syn-ack', 'name': 'msrpc', 'product': 'Microsoft Windows RPC', 'version': '', 'extrainfo': '', 'conf': '10', 'cpe': 'cpe:/o:microsoft:windows'}, 49681: {'state': 'open', 'reason': 'syn-ack', 'name': 'msrpc', 'product': 'Microsoft Windows RPC', 'version': '', 'extrainfo': '', 'conf': '10', 'cpe': 'cpe:/o:microsoft:windows'}}
-    nmapData2Excel('47.115.37.59',dTcpInfo,'tcp')
-    
-    
     
 if __name__ == "__main__":
     
