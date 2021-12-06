@@ -32,7 +32,7 @@ for filePath, dirNames, fileNames in os.walk(targetPath):
     for fileName in fileNames: #fileName是单纯的文件名，filePathName是完整的文件路径
         filePathName = os.path.join(os.getcwd(),filePath,fileName)
         print("Processing: " + str(filePathName))
-        wb = wb = openpyxl.load_workbook(filePathName)
+        wb = openpyxl.load_workbook(filePathName)
         
         try:
             ws = wb['TcpPorts']
@@ -65,4 +65,4 @@ for filePath, dirNames, fileNames in os.walk(targetPath):
         
         wb.close();
         
-wbResult.save('concatResult.xlsx')
+wbResult.save(filePath + '.xlsx')
