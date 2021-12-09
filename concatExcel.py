@@ -34,34 +34,29 @@ for filePath, dirNames, fileNames in os.walk(targetPath):
         print("Processing: " + str(filePathName))
         wb = openpyxl.load_workbook(filePathName)
         
-        try:
-            ws = wb['TcpPorts']
-        except Exception as e:
-            print("Error when processing " + filePathName)
-            break;
+        for ws in wb:
+            maxRow = ws.max_row
+            maxCol = ws.max_column
             
-        maxRow = ws.max_row
-        maxCol = ws.max_column
-        
-        if flag:
-            for i in range(2,maxRow+1):
-                for j in range(1, maxCol+2):
-                    if(j < 3):
+            if flag:
+                for i in range(2,maxRow+1):
+                    for j in range(1, maxCol+2):
+                        if(j < 3):
+                            value = ws.cell(i,j).value
+                            wsResult.cell(wsResultRowCount, j, value)
+                        elif(j == 3):
+                            value = str(ws.cell(i,j-2).value) + ":" + str(ws.cell(i,j-1).value)
+                            wsResult.cell(wsResultRowCount, j, value)
+                        else:
+                            value = ws.cell(i,j-1).value
+                            wsResult.cell(wsResultRowCount, j, value)
+                    wsResultRowCount = wsResultRowCount + 1
+            else:
+                for i in range(2,maxRow+1):
+                    for j in range(1, maxCol+1):
                         value = ws.cell(i,j).value
                         wsResult.cell(wsResultRowCount, j, value)
-                    elif(j == 3):
-                        value = str(ws.cell(i,j-2).value) + ":" + str(ws.cell(i,j-1).value)
-                        wsResult.cell(wsResultRowCount, j, value)
-                    else:
-                        value = ws.cell(i,j-1).value
-                        wsResult.cell(wsResultRowCount, j, value)
-                wsResultRowCount = wsResultRowCount + 1
-        else:
-            for i in range(2,maxRow+1):
-                for j in range(1, maxCol+1):
-                    value = ws.cell(i,j).value
-                    wsResult.cell(wsResultRowCount, j, value)
-                wsResultRowCount = wsResultRowCount + 1
+                    wsResultRowCount = wsResultRowCount + 1
         
         wb.close();
         

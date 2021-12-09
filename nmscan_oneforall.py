@@ -6,8 +6,7 @@ import os
 import openpyxl 
 import time
 import sys
-from config import *
-from rsmasscan import *
+
 
 '''
 需要安装nmap与masscan并设为环境变量，windows还需要加上后缀名.exe
@@ -35,6 +34,172 @@ from rsmasscan import *
 
 
 
+
+def myMasscan(targetsFile,cmdMasscan):
+    print("Masscan执行命令:",end='')
+    print(cmdMasscan)
+    result = subprocess.run(cmdMasscan,shell=True)
+           #subprocess生成新的进程
+           #subprocess.run()
+           #Python 3.5中新增的函数。执行指定的命令，等待命令执行完成后返回一个包含执行结果的CompletedProcess类的实例。
+           #subprocess.run(args, *, stdin=None, input=None, stdout=None, stderr=None, shell=False, timeout=None, check=False, universal_newlines=False)
+           #returncode: 执行完子进程状态，通常返回状态为0则表明它已经运行完毕，若值为负值 "-N",表明子进程被终。
+    
+    #print('subprocess.run调用返回结果result.stdout:')
+    #print(result.stdout)
+
+    #上面用subprocess调用命令行的形式，最终将结果保存在.json中，然后从json中取出数据传到masscanOutputInfo中，作为给nmap的数据
+    masscanOutputInfo = {}          #初始化
+    if not result.returncode:       #运行完毕，未被中断
+        with open('masscan.json','r+') as f: 
+            for line in f.readlines():
+                if line.startswith("{"):        #一行一个IP/端口
+                    tempLine = line + ','       #最后加逗号修复json
+                    portInfo = json.loads(tempLine.strip()[:-1])    #ports:该IP的所有端口
+                    #print('portInfo:')
+                    #print(portInfo)
+                    ip = portInfo["ip"]
+                    port = portInfo["ports"][0]["port"]     #由于多个了一个[]的特殊结构，所以要加上索引0，因为一行只有一个端口，所以完全OK
+                    portALLInfo = portInfo["ports"]
+
+                    if ip not in masscanOutputInfo:
+                        masscanOutputInfo[ip] = {}       #如果IP没有在masscanOutputInfo中出现过，就初始化一个masscanOutputInfo[ip]
+
+                    masscanOutputInfo[ip][port] = portALLInfo  #ip的ports_masscan（所有结果）中的某一个端口的，这个端口的全部信息
+    print('masscanOutputInfo:')
+    print(masscanOutputInfo)
+    return masscanOutputInfo
+
+def myNmap(nmapInfo):
+    '''
+    nampInfo字典有三个一级子字典，分别是host,arguments和portRange，
+    其中portRange在调用进来之前就以-p xxx的形式整合到arguments参数里了
+    '''
+    host = nmapInfo['host']     
+    arguments = nmapInfo['arguments']
+    scan = nmap.PortScanner()       
+    
+    print('nmap正在扫描host:',end='')
+    print(nmapInfo['host'])
+    print('使用参数:',end='')
+    print(nmapInfo['arguments'])
+    
+    scan_result = scan.scan(hosts=host,arguments=arguments)     #创建一次扫描，并行执行，取出结果
+    print("执行命令:" + scan.command_line())    #不知道为啥，这个选项就是会返回多余的-oX - 例如u'nmap -oX - -p 22,80 -sV 192.168.209.121-122'
+    
+    print('scan_result:')
+    print(scan_result,end='\n\n')
+
+    tcpInfo = {}
+    #hostname = scan_result['scan'][host]['hostnames'][0]['name'] #主机名,可能有很多主机名此处取第一个
+    address = scan_result['scan'][host]['addresses']['ipv4']    #主机ip地址
+    status = scan_result['scan'][host]['status']['state']   #主机状态:up或者down
+
+    tcpInfo = {}
+    udpInfo = {}
+    ports_count = 0
+    tcp_ports = []
+    udp_ports = []
+    ip_ports = []
+    sctp_ports = []
+    all_protocols = scan[host].all_protocols()
+    for protocol in all_protocols:
+        tcp_ports = scan[host].all_tcp() #所有tcp端口列表
+        udp_ports = scan[host].all_udp() #
+        ip_ports = scan[host].all_ip() #
+        sctp_ports = scan[host].all_sctp() #
+    ports_count = len(tcp_ports) + len(udp_ports) + len(ip_ports) + len(sctp_ports)
+    
+    if(ports_count > len(tcp_ports)):
+        print('发现除TCP外别的端口' + '\n\n')
+    else:
+        print('只有TCP端口')
+    
+    print('%s 主机端口数量为 %d' % (host,ports_count))
+    if ports_count == 0:
+        print('%s 无端口，跳过该IP' % (host))      #masscan发现端口，但是nmap扫描的时候又没有发现此端口
+        return 
+        
+        
+    if ports_count > 1000:
+        print("%s端口太多可能有waf",host)
+    
+    print(len(tcp_ports))
+    print(len(udp_ports))
+    
+    #写入TCP信息
+
+    print('line132')
+    if len(tcp_ports) > 0:
+        for tcp_port in tcp_ports:
+            tcp_port_info = scan[host]['tcp'][tcp_port]
+            
+            #tcpInfo[host][tcp_port] = {}
+            #print('tcp_port_info:')
+            #print(tcp_port_info)       #字典类型带大括号
+           
+            tcpInfo[tcp_port] = tcp_port_info
+            #info[host]["ports_nmap"]["ports"] = info[host]["ports_nmap"]["ports"].update(tcp_port,tcp_port_info)
+        #针对每一个host
+        print('%s的TCP端口信息为'%(host),end='\n')
+        print(tcpInfo,end='\n\n')
+        nmapData2Excel(host,tcpInfo,'Tcp')
+    
+    #写入UDP信息
+    if len(udp_ports) > 0:
+        for udp_port in udp_ports:
+            udp_port_info = scan[host]['udp'][udp_port]
+            udpInfo[udp_port] = udp_port_info
+        print('%s的UDP端口信息为'%(host),end='\n')
+        print(udpInfo,end='\n\n')
+        nmapData2Excel(host,udpInfo,'Udp')
+            
+
+
+def nmapData2Excel(host,hostInfo,protocol): #写入xls文件，如果存在就修改
+    print('\n进入excel表格处理nmapData2Excel函数,处理IP:%s\n' % (host))
+    
+    ports = list(hostInfo.keys())
+    print('端口列表:',end='')
+    print(ports)
+    
+    if not os.path.exists("./nmscanOutput/"+host+".xlsx"):
+        workbook = openpyxl.Workbook()
+    else:
+        workbook = openpyxl.load_workbook("./nmscanOutput/"+host+".xlsx")
+    
+    if protocol+'Ports' in workbook.sheetnames:
+        workSheet = workbook[protocol+'Ports']
+    else:
+        workSheet = workbook.create_sheet(protocol + 'Ports',0)
+        workSheet = workbook[protocol + 'Ports']
+    
+    #写列名
+    columns = ["ip","port","state","name","product","version","cpe","extrainfo",'script']
+    #columns = ['ip','port'] + list(hostInfo.[ports[0]].keys())
+    lenCol = len(columns)
+    for j in range(1,lenCol+1):
+            workSheet.cell(1,j,columns[j-1])
+    #workSheet.cell(1,j+1,'script')
+    
+    
+    #写数据
+    i = 2
+    for port in ports:
+        workSheet.cell(i,1,host)     
+        workSheet.cell(i,2,port)
+        #写IP和port之后的列
+        for k in range(2,lenCol-1):
+            workSheet.cell(i,k+1,hostInfo[port][columns[k]])
+        if 'script' in hostInfo[port]:
+            scriptContent = str(hostInfo[port][columns[lenCol-1]]).strip('{').strip('}')
+            workSheet.cell(i,lenCol,scriptContent)
+        i=i+1
+
+    workbook.save(filename="./nmscanOutput/"+ host + ".xlsx")
+    print(host + '的excel表格（%s页）操作完成' % (protocol))
+    print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),end='\n\n')
+
     
 if __name__ == "__main__":
     #debug()    #调试excel函数时使用函数，正式使用的时候可以删除
@@ -51,7 +216,7 @@ if __name__ == "__main__":
 
 
 
-    """
+
     #设置nmap线程，多线程调用nmap
     nmapThreads = 20
     #设置扫描端口
@@ -64,10 +229,11 @@ if __name__ == "__main__":
     masscanCmd = 'masscan -iL ' + targetsFile + masscanPortRange + ' -oJ masscan.json ' + masscanRate   
     #nmap选项,这里没有指定端口（-p） 指定端口选项在下方的代码指定
     nmapParam = ' -sV -sS -Pn --min-hostgroup 200 --min-parallelism 500 -T4 -v --script="http-title"'
-    """
-    #masscan执行命令和选项,如果masscan不是环境变量请修改开头的masscan
-    masscanCmd = 'masscan -iL ' + targetsFile + masscanPortRange + ' -oJ masscan.json ' + masscanRate
-
+    
+    
+    
+    
+    
     
     
     #设置masscan扫描端口:常用端口
@@ -78,6 +244,7 @@ if __name__ == "__main__":
     #masscanPortRange = ' -p 1-10000,10001,10021,10050,10051,10052,10086,10087,10088,10110,10111,10153,10210,10886,11027,11086,11111,11211,12121,12122,12181,12222,12345,13000,13001,13280,13306,14001,15010,15011,15012,15015,15672,16775,17051,17102,17502,17602,18000,18001,18003,18009,18010,18080,18081,18082,18083,18443,18689,18888,19091,19101,20000,20001,20022,20051,20052,21370,21380,21674,23809,27017,28020,28080,28081,28082,28083,29022,29090,30051,30052,32229,35007,35663,36379,37777,38080,38091,38517,39001,39002,40443,41028,50000,50021,50070,50100,50658,52713,60001,60002,60003,60004,60005,61616'
 
     
+    #600000ms是十分钟
     
     #显示开始时间
     startTimeStamp = time.time()

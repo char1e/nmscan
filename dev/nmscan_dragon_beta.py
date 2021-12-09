@@ -2,8 +2,16 @@ import sys
 import os
 import openpyxl
 import nmap  
+import time
 from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor
 
+"""
+输入文件格式为ip:port
+与nmscan相比，端口默认已经扫描出来了，不使用masscan
+version:2
+每次扫描出结果产生一个新工作表
+
+"""
 def myNmap(nmapInfo):
 
     host = nmapInfo['host']     
@@ -59,8 +67,6 @@ def myNmap(nmapInfo):
     print(len(udp_ports))
     
     #写入TCP信息
-
-    print('line132')
     if len(tcp_ports) > 0:
         for tcp_port in tcp_ports:
             tcp_port_info = scan[host]['tcp'][tcp_port]
@@ -94,29 +100,45 @@ def nmapData2Excel(host,hostInfo,protocol): #写入xls文件，如果存在就�
     ports = list(hostInfo.keys())
     print('端口列表:',end='')
     print(ports)
-    
+    timeNow = time.strftime("%Y-%m-%d %H时%M分%S秒",time.localtime())
+    type(timeNow)
     if not os.path.exists("./nmscanOutput/"+host+".xlsx"):
+        #创建一个新工作表
+        print('newExcel')
         workbook = openpyxl.Workbook()
-    else:
-        workbook = openpyxl.load_workbook("./nmscanOutput/"+host+".xlsx")
-    
-    if protocol+'Ports' in workbook.sheetnames:
-        workSheet = workbook[protocol+'Ports']
-    else:
-        workSheet = workbook.create_sheet(protocol + 'Ports',0)
-        workSheet = workbook[protocol + 'Ports']
-    
-    #写列名
-    columns = ["ip","port","state","name","product","version","cpe","extrainfo",'script']
-    #columns = ['ip','port'] + list(hostInfo.[ports[0]].keys())
-    lenCol = len(columns)
-    for j in range(1,lenCol+1):
+        workSheet = workbook.active
+        workSheet.title = timeNow
+        #写列名
+        columns = ["ip","port","state","name","product","version","cpe","extrainfo",'script']
+        lenCol = len(columns)
+        for j in range(1,lenCol+1):
             workSheet.cell(1,j,columns[j-1])
-    #workSheet.cell(1,j+1,'script')
+    elif timeNow not in workbook.get_sheet_names():
+        #本次扫描工作表不存在
+        print('timeNowSheetNotExist')
+        workbook = openpyxl.load_workbook("./nmscanOutput/"+host+".xlsx")
+        workSheet = workbook.create_sheet(timeNow)
+        #写列名
+        columns = ["ip","port","state","name","product","version","cpe","extrainfo",'script']
+        lenCol = len(columns)
+        for j in range(1,lenCol+1):
+            workSheet.cell(1,j,columns[j-1])
+    elif timeNow in workbook.get_sheet_names():
+        print('timeNowSheetExist')
+        #本次工作表存在
+        workbook = openpyxl.load_workbook("./nmscanOutput/"+host+".xlsx")
+        workSheet = workbook[timeNow]
+    
+    print('创建名为:',end='')
+    print(time.strftime("%Y-%m-%d %H时%M分%S秒",time.localtime()),end='')
+    print('的工作表')
     
     
     #写数据
-    i = 2
+    rowIndexNow = workSheet.max_row
+    i = rowIndexNow + 1
+    print('write no ',end='')
+    print(i)
     for port in ports:
         workSheet.cell(i,1,host)     
         workSheet.cell(i,2,port)
@@ -129,7 +151,7 @@ def nmapData2Excel(host,hostInfo,protocol): #写入xls文件，如果存在就�
         i=i+1
 
     workbook.save(filename="./nmscanOutput/"+ host + ".xlsx")
-    print(host + '的excel表格（%s页）操作完成' % (protocol))
+    print(host + '的%s工作表操作完成' % (timeNow,))
     print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),end='\n\n')
     
     
@@ -155,7 +177,6 @@ if __name__ == "__main__":
         else:
             break
     #print(IPList)
-    print(152)
     nmapParam = ' -sV -Pn -sS -v --script="http-title"'
     nmapThreads = 20
     thread_pool = ThreadPoolExecutor(nmapThreads)
@@ -163,9 +184,7 @@ if __name__ == "__main__":
     if not os.path.exists("./nmscanOutput"):
         os.makedirs("./nmscanOutput")
     
-    print(155)
     for i in range(len(ipList)):
-        print(159)
         nmapFuncParam = {}
         nmapFuncParam['host'] = ipList[i]
         nmapPortsParam = ' -p ' + portList[i].strip('\n') #nmap只扫描masscan发现的端口，拼接成-p xxx的选项
