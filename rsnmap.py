@@ -1,7 +1,7 @@
 import json
 import nmap
 from rsio import nmapData2Excel
-def myNmap(nmapInfo):
+def rsNmap(nmapInfo):
     '''
     nampInfo字典有三个一级子字典，分别是host,arguments和portRange，
     其中portRange在调用进来之前就以-p xxx的形式整合到arguments参数里了

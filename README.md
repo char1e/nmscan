@@ -20,13 +20,17 @@ sudo pip3 install subprocess.run python_nmap openpyxl
 ### 使用方法
 
 ```
-python3 nmscan.py <目标ip文件>
+python3 nmscan.py 
+	-f 目标文件路径
+	-p masscan端口扫描范围，若不指定则采用config文件里的值
+	-r masscan扫描速率，若不指定则采用config文件里的值
+	-t nmap线程数，若不指定则采用config文件里的值
 ```
 
 例如
 
 ```
-python3 nmscan.py targets.txt
+python3 nmscan.py -f targets.txt -p 1-65535 -r 1500 -t 20
 ```
 
 注意目标ip文件的格式必须符合masscan的目标ip文件输入格式
@@ -41,17 +45,7 @@ python3 nmscan.py targets.txt
 
 192.168.1.1-255
 
- 
 
-### 选项
-
-##### 1. 速度配置
-
-修改masscanRate参数
-
-##### 2. 端口配置
-
-修改masscanPortRange参数
 
 
 
@@ -65,14 +59,10 @@ python3 concatExcel.py nmscanOutput/
 
 
 
-
-
 ### 注意事项
 
 虚拟机运行建议增大内存，调高处理器数量
 
-
-
-2020.9.27 by rhaps
+2021.12.11 by rhaps
 
  

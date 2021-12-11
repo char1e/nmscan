@@ -6,6 +6,7 @@ import os
 import openpyxl 
 import time
 import sys
+from optparse import OptionParser
 from config import *
 from rsmasscan import *
 
@@ -34,14 +35,29 @@ from rsmasscan import *
 '''
 
 
-
     
 if __name__ == "__main__":
     #debug()    #调试excel函数时使用函数，正式使用的时候可以删除
     
-    
-    #设置输入文件
-    targetsFile = sys.argv[1]
+
+    parser = OptionParser()
+    parser.add_option('-f', '--file', dest='targetsFile', type='string', help='rate of masscan')
+    parser.add_option('-r', '--rate', dest='masscanRate', type='string', help='rate of masscan')
+    parser.add_option('-t', '--threads', dest='nmapThreads', type='int', help='threads of nmap')
+    parser.add_option('-p', '--ports' ,dest='masscanPortRange', type='string', help='port range of masscan')
+    options, args = parser.parse_args()
+    print(options)
+    print(type(options))
+    if options.targetsFile:
+        targetsFile = options.targetsFile
+    if options.masscanRate:
+        masscanRate = ' --rate ' + options.masscanRate
+    if options.nmapThreads:
+        nmapThreads = options.nmapThreads
+    if options.masscanPortRange:
+        masscanPortRange = ' -p ' + options.masscanPortRange
+
+
     while True:
         if os.path.exists(targetsFile):
             break
@@ -50,7 +66,8 @@ if __name__ == "__main__":
             targetsFile = input = ("please input targetsFile")
 
 
-
+    
+    print(nmapThreads)
     """
     #设置nmap线程，多线程调用nmap
     nmapThreads = 20
@@ -85,7 +102,7 @@ if __name__ == "__main__":
     print("扫描开始，时间:"+ startTime,end='\n\n')
     
     #设置输入文件路径和masscan命令
-    masscanOutputDict = myMasscan(targetsFile,masscanCmd)    #masscan扫描出的信息存放在info（字典类型）
+    masscanOutputDict = rsMasscan(targetsFile,masscanCmd)    #masscan扫描出的信息存放在info（字典类型）
     
     #massscan结束时显示时间
     masscanOverTimeStamp = time.time()
@@ -117,11 +134,11 @@ if __name__ == "__main__":
         nmapPortsParam = ' -p ' + str(nmapFuncParam['portRange']).strip('[').strip(']').replace(' ','') #nmap只扫描masscan发现的端口，拼接成-p xxx的选项
         #nmapPortsParam = ' -p 1-65535' #nmap全端口扫描
         nmapFuncParam['arguments'] = nmapParam + nmapPortsParam     #最终nmap执行的选项
-        thread_pool.submit(myNmap,nmapFuncParam)
+        thread_pool.submit(rsNmap,nmapFuncParam)
     
     # 线程池可以看做容纳线程的容器；
     #一个应用程序最多只能有一个线程池，每排入一个工作函数，就相当于请求创建一个线程；
-    #理解为调用myNmap函数，传入参数nmapFuncParam
+    #理解为调用rsNmap函数，传入参数nmapFuncParam
     
     #显示结束时间
     #passTime = int(time.time()) - int(masscanOverTimeStamp)
