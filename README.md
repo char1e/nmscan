@@ -32,7 +32,6 @@ python3 nmscan.py
 
 ```
 python3 nmscan.py -f targets.txt -p 1-65535 -r 1500 -t 20
-
 ```
 
 注意目标ip文件的格式必须符合masscan的目标ip文件输入格式
