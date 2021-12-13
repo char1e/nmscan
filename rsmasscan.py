@@ -2,7 +2,7 @@
 from rsnmap import *
 import subprocess   
 
-def rsMasscan(targetsFile,cmdMasscan):
+def rsMasscan(cmdMasscan):
     print("Masscan执行命令:",end='')
     print(cmdMasscan)
     result = subprocess.run(cmdMasscan,shell=True)

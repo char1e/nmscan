@@ -41,7 +41,8 @@ if __name__ == "__main__":
     
 
     parser = OptionParser()
-    parser.add_option('-f', '--file', dest='targetsFile', type='string', help='rate of masscan')
+    parser.add_option('-f', '--file', dest='targetsFile', type='string', help='list of ip')
+    parser.add_option('-i', '--ip-addr', dest='ip', type='string', help='which specific ip to be scanned')
     parser.add_option('-r', '--rate', dest='masscanRate', type='string', help='rate of masscan')
     parser.add_option('-t', '--threads', dest='nmapThreads', type='int', help='threads of nmap')
     parser.add_option('-p', '--ports' ,dest='masscanPortRange', type='string', help='port range of masscan')
@@ -49,7 +50,15 @@ if __name__ == "__main__":
     print(options)
     print(type(options))
     if options.targetsFile:
-        targetsFile = options.targetsFile
+        cmdTargets = '-iL ' + options.targetsFile
+        while True:
+            if os.path.exists(targetsFile):
+                break
+            else:
+                print('Invalid targetsFile\n')
+                targetsFile = input = ("please input targetsFile")
+    elif options.ip:
+        cmdTargets = options.ip
     if options.masscanRate:
         masscanRate = ' --rate ' + options.masscanRate
     if options.nmapThreads:
@@ -58,12 +67,7 @@ if __name__ == "__main__":
         masscanPortRange = ' -p ' + options.masscanPortRange
 
 
-    while True:
-        if os.path.exists(targetsFile):
-            break
-        else:
-            print('Invalid targetsFile\n')
-            targetsFile = input = ("please input targetsFile")
+    
 
 
     
@@ -83,7 +87,7 @@ if __name__ == "__main__":
     nmapParam = ' -sV -sS -Pn --min-hostgroup 200 --min-parallelism 500 -T4 -v --script="http-title"'
     """
     #masscan执行命令和选项,如果masscan不是环境变量请修改开头的masscan
-    masscanCmd = 'masscan -iL ' + targetsFile + masscanPortRange + ' -oJ masscan.json ' + masscanRate
+    masscanCmd = 'masscan ' + cmdTargets + masscanPortRange + ' -oJ masscan.json ' + masscanRate
 
     
     
@@ -102,7 +106,7 @@ if __name__ == "__main__":
     print("扫描开始，时间:"+ startTime,end='\n\n')
     
     #设置输入文件路径和masscan命令
-    masscanOutputDict = rsMasscan(targetsFile,masscanCmd)    #masscan扫描出的信息存放在info（字典类型）
+    masscanOutputDict = rsMasscan(masscanCmd)    #masscan扫描出的信息存放在info（字典类型）
     
     #massscan结束时显示时间
     masscanOverTimeStamp = time.time()
