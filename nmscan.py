@@ -37,9 +37,6 @@ from rsmasscan import *
 
     
 if __name__ == "__main__":
-    #debug()    #调试excel函数时使用函数，正式使用的时候可以删除
-    
-
     parser = OptionParser()
     parser.add_option('-f', '--file', dest='targetsFile', type='string', help='list of ip')
     parser.add_option('-i', '--ip-addr', dest='ip', type='string', help='which specific ip to be scanned')
@@ -50,13 +47,14 @@ if __name__ == "__main__":
     print(options)
     print(type(options))
     if options.targetsFile:
-        cmdTargets = '-iL ' + options.targetsFile
+        targetsFile = options.targetsFile
         while True:
             if os.path.exists(targetsFile):
                 break
             else:
                 print('Invalid targetsFile\n')
                 targetsFile = input = ("please input targetsFile")
+        cmdTargets = '-iL ' + options.targetsFile
     elif options.ip:
         cmdTargets = options.ip
     if options.masscanRate:
@@ -66,11 +64,6 @@ if __name__ == "__main__":
     if options.masscanPortRange:
         masscanPortRange = ' -p ' + options.masscanPortRange
 
-
-    
-
-
-    
     print(nmapThreads)
     """
     #设置nmap线程，多线程调用nmap

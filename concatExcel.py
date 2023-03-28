@@ -57,7 +57,7 @@ for filePath, dirNames, fileNames in os.walk(targetPath):
                         value = ws.cell(i,j).value
                         wsResult.cell(wsResultRowCount, j, value)
                     wsResultRowCount = wsResultRowCount + 1
-        
+        print(60)
         wb.close();
-        
+print(62)
 wbResult.save(filePath + '.xlsx')
